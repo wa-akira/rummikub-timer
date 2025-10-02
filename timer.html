@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ルミキューブ用タイマー</title>
+	<style>
+		body { font-family: sans-serif; background: #f8f8f8; }
+		#timer {
+			font-size: 5em;
+			text-align: center;
+			margin-top: 40px;
+			font-weight: bold;
+			letter-spacing: 0.1em;
+			color: #222;
+			background: linear-gradient(90deg, #ffeaa7 0%, #fdcb6e 100%);
+			border-radius: 20px;
+			box-shadow: 0 4px 24px #fdcb6e88;
+			padding: 30px 0;
+			width: 80vw;
+			max-width: 500px;
+			margin-left: auto;
+			margin-right: auto;
+			border: 3px solid #fdcb6e;
+		}
+		#controls { text-align: center; margin-top: 20px; }
+		button { font-size: 1.2em; margin: 0 10px; padding: 10px 24px; }
+	</style>
+</head>
+<body>
+	<h1 style="text-align:center;">ルミキューブ用タイマー</h1>
+	<div id="timer">00:00</div>
+	<div id="set-area" style="text-align:center; margin-top:20px;">
+		<input type="number" id="min" min="0" max="99" value="0" style="width:50px; font-size:1.2em;"> 分
+		<input type="number" id="sec" min="0" max="59" value="0" style="width:50px; font-size:1.2em;"> 秒
+		<button id="set">セット</button>
+	</div>
+	<div id="controls">
+		<button id="start">スタート</button>
+		<button id="stop">ストップ</button>
+		<button id="reset">リセット</button>
+	</div>
+	<script>
+	let time = 0;
+	let timerId = null;
+	const timerDiv = document.getElementById('timer');
+	const startBtn = document.getElementById('start');
+	const stopBtn = document.getElementById('stop');
+	const resetBtn = document.getElementById('reset');
+	const setBtn = document.getElementById('set');
+	const minInput = document.getElementById('min');
+	const secInput = document.getElementById('sec');
+
+	function updateDisplay() {
+		const min = String(Math.floor(time / 60)).padStart(2, '0');
+		const sec = String(time % 60).padStart(2, '0');
+		timerDiv.textContent = `${min}:${sec}`;
+	}
+
+	setBtn.onclick = function() {
+		const min = parseInt(minInput.value, 10) || 0;
+		const sec = parseInt(secInput.value, 10) || 0;
+		time = min * 60 + sec;
+		updateDisplay();
+	};
+
+	startBtn.onclick = function() {
+		if (timerId || time <= 0) return;
+		timerId = setInterval(() => {
+			if (time > 0) {
+				time--;
+				updateDisplay();
+				if (time === 0) {
+					clearInterval(timerId);
+					timerId = null;
+					// 音声通知
+					const msg = new SpeechSynthesisUtterance('タイマーが終了しました');
+					window.speechSynthesis.cancel(); // 既存の発話を停止
+					window.speechSynthesis.speak(msg);
+				}
+			}
+		}, 1000);
+	};
+
+	stopBtn.onclick = function() {
+		clearInterval(timerId);
+		timerId = null;
+	};
+
+	resetBtn.onclick = function() {
+		clearInterval(timerId);
+		timerId = null;
+		time = 0;
+		minInput.value = 0;
+		secInput.value = 0;
+		updateDisplay();
+	};
+
+	updateDisplay();
+	</script>
+</body>
+</html>
